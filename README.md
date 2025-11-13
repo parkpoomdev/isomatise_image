@@ -2,6 +2,9 @@
 
 A web application that transforms images into isometric projections with various orientations and width variants.
 
+<img width="861" height="853" alt="image" src="https://github.com/user-attachments/assets/bc2235a3-76e1-46b9-a0e3-a0ad06154ba0" />
+
+
 ## Features
 
 - Upload images in various formats (PNG, JPG, JPEG, GIF, BMP, TIFF)
