@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isometric Image Transformer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            border: none;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .file-input-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .file-name {
+            margin-top: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .preview-section {
+            margin-bottom: 30px;
+        }
+
+        .preview-image {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            display: block;
+        }
+
+        .process-button {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+        }
+
+        .process-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .process-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 40px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .result-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .result-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .success {
+            background: #51cf66;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Isometric Image Transformer</h1>
+            <p>Transform your images into isometric projections with various orientations and width variants</p>
+        </div>
+
+        <div class="main-content">
+            <div class="upload-section">
+                <div class="file-input-wrapper">
+                    <input type="file" id="imageInput" class="file-input" accept="image/*">
+                    <button class="file-input-button">Choose Image File</button>
+                </div>
+                <div class="file-name" id="fileName"></div>
+                <div id="pasteHint" style="margin-top:8px;color:#666;font-size:0.95em;">Or paste an image from the clipboard (Ctrl+V)</div>
+                
+                <div class="preview-section" id="previewSection" style="display: none;">
+                    <img id="previewImage" class="preview-image" alt="Preview">
+                    <br>
+                    <button id="processButton" class="process-button">Process Image</button>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Processing your image...</p>
+                </div>
+
+                <div class="error" id="errorMessage"></div>
+                <div class="success" id="successMessage"></div>
+                
+                <div class="local-files-section" style="margin-top: 20px; text-align: center;">
+                    <button id="viewSavedFiles" class="file-input-button" style="background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);">
+                        View Saved Files
+                    </button>
+                    <div id="savedFilesInfo" style="margin-top: 10px; color: #666; font-size: 0.9em;"></div>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsSection">
+                <h2>Processed Images</h2>
+                <div class="results-grid" id="resultsGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const fileName = document.getElementById('fileName');
+        const previewSection = document.getElementById('previewSection');
+        const previewImage = document.getElementById('previewImage');
+        const processButton = document.getElementById('processButton');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsGrid = document.getElementById('resultsGrid');
+        const viewSavedFiles = document.getElementById('viewSavedFiles');
+        const savedFilesInfo = document.getElementById('savedFilesInfo');
+
+        let selectedFile = null;
+
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                fileName.textContent = `Selected: ${file.name}`;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewSection.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+                
+                // Hide previous results
+                resultsSection.style.display = 'none';
+                hideMessages();
+            }
+        });
+
+        // Paste-from-clipboard support
+        document.addEventListener('paste', handlePasteEvent);
+
+        function handlePasteEvent(e) {
+            hideMessages();
+            if (!e.clipboardData) return;
+
+            const items = e.clipboardData.items;
+            if (!items) return;
+
+            // First, look for file/image items
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.kind === 'file' && item.type && item.type.startsWith('image/')) {
+                    const file = item.getAsFile();
+                    if (file) {
+                        selectedFile = file;
+                        fileName.textContent = `Pasted: ${file.name || 'clipboard-image'}`;
+
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            previewImage.src = ev.target.result;
+                            previewSection.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+
+                        resultsSection.style.display = 'none';
+                        return;
+                    }
+                }
+            }
+
+            // If no file item, try to extract data URL from HTML or plain text
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+
+                if (item.type === 'text/html') {
+                    item.getAsString(function(html) {
+                        const m = html.match(/src=["'](data:image\/[^"']+)["']/);
+                        if (m && m[1]) {
+                            const dataUrl = m[1];
+                            previewImage.src = dataUrl;
+                            selectedFile = dataURLtoFile(dataUrl, 'pasted.png');
+                            fileName.textContent = 'Pasted image (from HTML)';
+                            previewSection.style.display = 'block';
+                            resultsSection.style.display = 'none';
+                        }
+                    });
+                    return;
+                }
+
+                if (item.type === 'text/plain') {
+                    item.getAsString(function(text) {
+                        const m = text.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
+                        if (m && m[0]) {
+                            const dataUrl = m[0];
+                            previewImage.src = dataUrl;
+                            selectedFile = dataURLtoFile(dataUrl, 'pasted.png');
+                            fileName.textContent = 'Pasted image (from text)';
+                            previewSection.style.display = 'block';
+                            resultsSection.style.display = 'none';
+                        }
+                    });
+                    // continue checking other items
+                }
+            }
+        }
+
+        function dataURLtoFile(dataurl, filename) {
+            const arr = dataurl.split(',');
+            const mimeMatch = arr[0].match(/:(.*?);/);
+            const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            try {
+                return new File([u8arr], filename, { type: mime });
+            } catch (err) {
+                // Fallback for older browsers that don't support File constructor
+                const blob = new Blob([u8arr], { type: mime });
+                blob.name = filename;
+                return blob;
+            }
+        }
+
+        processButton.addEventListener('click', function() {
+            if (!selectedFile) {
+                showError('Please select an image file first.');
+                return;
+            }
+
+            processImage();
+        });
+
+        viewSavedFiles.addEventListener('click', function() {
+            viewSavedFilesList();
+        });
+
+        function processImage() {
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+
+            // Show loading
+            loading.style.display = 'block';
+            processButton.disabled = true;
+            hideMessages();
+
+            fetch('/process', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                processButton.disabled = false;
+
+                if (data.success) {
+                    showResults(data.results);
+                    showSuccess('Image processed successfully! All variants have been saved locally and are available for download.');
+                } else {
+                    showError(data.error || 'An error occurred while processing the image.');
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                processButton.disabled = false;
+                showError('Network error: ' + error.message);
+            });
+        }
+
+        function showResults(results) {
+            resultsGrid.innerHTML = '';
+            
+            results.forEach(result => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                
+                resultItem.innerHTML = `
+                    <h3>${result.name}</h3>
+                    <img src="data:image/png;base64,${result.image}" alt="${result.name}">
+                    <br>
+                    <button class="download-btn" onclick="downloadImage('${result.name}', '${result.image}')">
+                        Download
+                    </button>
+                `;
+                
+                resultsGrid.appendChild(resultItem);
+            });
+            
+            resultsSection.style.display = 'block';
+        }
+
+        function downloadImage(filename, base64Data) {
+            const link = document.createElement('a');
+            link.href = 'data:image/png;base64,' + base64Data;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+
+        function viewSavedFilesList() {
+            fetch('/saved-files')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.files.length === 0) {
+                            savedFilesInfo.innerHTML = 'No saved files found. Process an image first!';
+                            return;
+                        }
+
+                        // Group files by subfolder
+                        const groups = {};
+                        data.files.forEach(f => {
+                            const key = f.subfolder || 'root';
+                            if (!groups[key]) groups[key] = [];
+                            groups[key].push(f);
+                        });
+
+                        // Render clickable folder list
+                        let html = `<div style="text-align:left; max-width:700px; margin:0 auto;">`;
+                        html += `<strong>${data.files.length} files saved locally</strong><br>`;
+                        html += `<small>Location: ${data.output_folder}</small><br><br>`;
+                        html += `<div><em>Click a folder to view its gallery:</em></div><ul>`;
+
+                        // Sort folder keys descending (newest timestamp first if numeric)
+                        const keys = Object.keys(groups).sort((a,b)=>{
+                            if (a === 'root') return 1;
+                            if (b === 'root') return -1;
+                            return Number(b) - Number(a);
+                        });
+
+                        keys.forEach(key => {
+                            const count = groups[key].length;
+                            const display = key === 'root' ? 'root' : `${key} (${new Date(Number(key) * 1000).toLocaleString()})`;
+                            html += `<li style="margin:8px 0; cursor:pointer;"><a href="#" data-folder="${key}" class="folder-link">${display} — ${count} files</a></li>`;
+                        });
+
+                        html += `</ul></div>`;
+                        savedFilesInfo.innerHTML = html;
+
+                        // Add click handlers for folder links
+                        document.querySelectorAll('.folder-link').forEach(el => {
+                            el.addEventListener('click', function(ev) {
+                                ev.preventDefault();
+                                const folder = this.getAttribute('data-folder');
+                                showGalleryForFolder(folder, groups[folder]);
+                            });
+                        });
+                    } else {
+                        savedFilesInfo.innerHTML = 'Error loading saved files: ' + data.error;
+                    }
+                })
+                .catch(error => {
+                    savedFilesInfo.innerHTML = 'Network error: ' + error.message;
+                });
+        }
+
+        // Render gallery for a selected folder
+        function showGalleryForFolder(folder, files) {
+            resultsGrid.innerHTML = '';
+            if (!files || files.length === 0) {
+                resultsGrid.innerHTML = '<div>No files in this folder.</div>';
+            } else {
+                files.forEach(f => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item';
+
+                    // Build URL for file served by Flask. If subfolder is 'root' use just filename
+                    const path = (f.subfolder && f.subfolder !== 'root') ? `${encodeURIComponent(f.subfolder)}/${encodeURIComponent(f.name)}` : encodeURIComponent(f.name);
+                    const url = `/outputs/${path}`;
+
+                    resultItem.innerHTML = `
+                        <h3>${f.name}</h3>
+                        <img src="${url}" alt="${f.name}">
+                        <br>
+                        <a class="download-btn" href="${url}" download>Download</a>
+                    `;
+
+                    resultsGrid.appendChild(resultItem);
+                });
+            }
+
+            // Show the results section as a gallery
+            resultsSection.style.display = 'block';
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
