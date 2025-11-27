@@ -1,0 +1,31 @@
+# Ignore all subfolders and files in outputs directory
+outputs/*/
+
+# Keep the outputs directory itself
+!outputs/.gitkeep
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+uploads/*
+
